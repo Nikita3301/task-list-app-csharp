@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskListApp", "TaskListApp\TaskListApp.csproj", "{F10C31E2-936E-445F-A0C7-2688749AE7FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskLists.Application", "TaskLists.Application\TaskLists.Application.csproj", "{52537C26-C34F-4A4C-8EF7-CB55E1D7C4C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskLists.Contracts", "TaskLists.Contracts\TaskLists.Contracts.csproj", "{6F8F068C-F232-47F0-87E3-4677583DC3E6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F10C31E2-936E-445F-A0C7-2688749AE7FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F10C31E2-936E-445F-A0C7-2688749AE7FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F10C31E2-936E-445F-A0C7-2688749AE7FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F10C31E2-936E-445F-A0C7-2688749AE7FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52537C26-C34F-4A4C-8EF7-CB55E1D7C4C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52537C26-C34F-4A4C-8EF7-CB55E1D7C4C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52537C26-C34F-4A4C-8EF7-CB55E1D7C4C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52537C26-C34F-4A4C-8EF7-CB55E1D7C4C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F8F068C-F232-47F0-87E3-4677583DC3E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F8F068C-F232-47F0-87E3-4677583DC3E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F8F068C-F232-47F0-87E3-4677583DC3E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F8F068C-F232-47F0-87E3-4677583DC3E6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
