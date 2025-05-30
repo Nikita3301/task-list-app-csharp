@@ -3,6 +3,7 @@ using TaskListApp.Mapping;
 using TaskLists.Application.Repositories;
 using TaskLists.Application.Services;
 using TaskLists.Contracts.Requests;
+using TaskLists.Contracts.Responses;
 
 namespace TaskListApp.Controllers;
 
@@ -22,42 +23,30 @@ public class TaskListController : ControllerBase
     }
 
     [HttpPost(ApiEndpoints.TaskListEndpoints.Create)]
+    [ProducesResponseType(typeof(TaskListResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationFailureResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateTaskListRequest request)
     {
         var userExists = await _userRepository.ExistsByIdAsync(request.UserId);
         if (!userExists)
         {
-            return BadRequest("User not found");
+            return BadRequest("User does not exist");
         }
-        
-        if (request.ListName.Length is < 1 or > 255)
-        {
-            return BadRequest("List name must have from 1 to 255 characters");
-        }
-        
+   
         var taskList = request.MapToTaskList();
         
-        var taskListCreationResult = await _taskListService.CreateAsync(taskList);
+        if (request.Tasks?.Count > 0)
+        {
+            var tasks = request.Tasks.MapToTasks(taskList.ListId);
+            taskList.Tasks = tasks;
+        }
         
-     
+        var taskListCreationResult = await _taskListService.CreateAsync(taskList);
         if (taskListCreationResult is null)
         {
             return BadRequest("Could not create task list");
         }
-
-        if (request.Tasks?.Count > 0)
-        {
-            var tasks = request.Tasks.MapToTasks(taskListCreationResult.ListId);
-            var taskCreationResult = await _taskItemService.CreateMultipleAsync(tasks, taskListCreationResult.ListId);
-
-            if (!taskCreationResult)
-            {
-                return BadRequest("Could not create tasks");
-            }
-            
-            taskList.Tasks = tasks;
-        }
-
+        
         var result = taskListCreationResult.MapToTaskListResponse();
         
         return Ok(result);

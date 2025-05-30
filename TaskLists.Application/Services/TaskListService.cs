@@ -1,4 +1,5 @@
-﻿using TaskLists.Application.Models;
+﻿using FluentValidation;
+using TaskLists.Application.Models;
 using TaskLists.Application.Repositories;
 using Task = System.Threading.Tasks.Task;
 
@@ -9,17 +10,22 @@ public class TaskListService : ITaskListService
     private readonly ITaskListRepository _taskListRepository;
     private readonly ITaskItemRepository _taskItemRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IValidator<TaskList> _taskListValidator;
 
-    public TaskListService(ITaskListRepository taskListRepository, ITaskItemRepository taskItemRepository, IUserRepository userRepository)
+    public TaskListService(ITaskListRepository taskListRepository, ITaskItemRepository taskItemRepository, IUserRepository userRepository, IValidator<TaskList> taskListValidator)
     {
         _taskListRepository = taskListRepository;
         _taskItemRepository = taskItemRepository;
         _userRepository = userRepository;
+        _taskListValidator = taskListValidator;
     }
 
     public async Task<TaskList?> CreateAsync(TaskList taskList)
     {
-        return await _taskListRepository.CreateAsync(taskList);
+        await _taskListValidator.ValidateAndThrowAsync(taskList);
+        var taskListCreated = await _taskListRepository.CreateAsync(taskList);
+        
+        return taskListCreated;
     }
 
     public async Task<List<TaskList>?> GetByUserIdAsync(Guid userId)
@@ -60,6 +66,8 @@ public class TaskListService : ITaskListService
 
     public async Task<TaskList?> UpdateAsync(TaskList taskList)
     {
+        await _taskListValidator.ValidateAndThrowAsync(taskList);
+        
        var taskListExists = await _taskListRepository.ExistsByIdAsync(taskList.ListId);
 
        if (!taskListExists)
@@ -78,6 +86,8 @@ public class TaskListService : ITaskListService
 
     public async Task<TaskList?> UpdateFullAsync(TaskList taskList)
     {
+        await _taskListValidator.ValidateAndThrowAsync(taskList);
+        
         await _taskListRepository.UpdateAsync(taskList);
         
         // var tasksExists = await _taskItemRepository.ExistsTasksByListIdAsync(taskList.ListId);

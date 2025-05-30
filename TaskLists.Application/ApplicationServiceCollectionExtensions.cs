@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 using TaskLists.Application.Database;
 using TaskLists.Application.Repositories;
 using TaskLists.Application.Services;
@@ -16,6 +17,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<ITaskItemRepository, TaskItemRepository>();
         services.AddSingleton<ITaskItemService, TaskItemService>();
+        services.AddValidatorsFromAssemblyContaining<IApplicationMarker>(ServiceLifetime.Singleton);
         
         return services;
     }

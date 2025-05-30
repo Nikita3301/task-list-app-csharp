@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
+using TaskListApp.Mapping;
 using TaskLists.Application;
 using TaskLists.Application.Database;
 
@@ -21,6 +22,9 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+
+app.UseMiddleware<ValidationMappingMiddleware>();
 app.MapControllers();
 
 app.UseHttpsRedirection();

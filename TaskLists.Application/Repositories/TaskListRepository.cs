@@ -20,17 +20,58 @@ public class TaskListRepository : ITaskListRepository
     public async Task<TaskList?> CreateAsync(TaskList taskList)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
+        var taskItemsCollection = database.GetCollection<TaskItem>("Tasks");
         var taskListCollection = database.GetCollection<TaskList>("TaskList");
 
+        
+        //System.NotSupportedException: Standalone servers do not support transactions.
+        
+        // using var session = await database.Client.StartSessionAsync();
+        // session.StartTransaction();
+        // try
+        // {
+        //     await taskListCollection.InsertOneAsync(taskList);
+        //
+        //     if (taskList.Tasks != null)
+        //     {
+        //         foreach (var taskItem in taskList.Tasks)
+        //         {
+        //             taskItem.ListId = taskList.ListId;
+        //         }
+        //
+        //         await taskItemsCollection.InsertManyAsync(taskList.Tasks);
+        //     }
+        //         
+        //     await session.CommitTransactionAsync();
+        //         
+        //     return taskList;
+        // }
+        // catch (Exception e)
+        // {
+        //     await session.AbortTransactionAsync();
+        //     return null;
+        // }
+        
         try
         {
             await taskListCollection.InsertOneAsync(taskList);
+
+            if (taskList.Tasks == null) return taskList;
+            foreach (var taskItem in taskList.Tasks)
+            {
+                taskItem.ListId = taskList.ListId;
+            }
+                
+            await taskItemsCollection.InsertManyAsync(taskList.Tasks);
+
             return taskList;
         }
         catch (Exception e)
         {
             return null;
         }
+        
+        
     }
 
     public async Task<List<TaskList>?> GetByUserIdAsync(Guid userId)
@@ -89,6 +130,4 @@ public class TaskListRepository : ITaskListRepository
         var document = await collection.Find(i => i.ListId == id).FirstAsync();
         return document is not null;
     }
-
-   
 }
