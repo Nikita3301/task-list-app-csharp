@@ -104,6 +104,16 @@ public class TaskListRepository : ITaskListRepository
         };
     }
 
+    public async Task<Guid> GetOwnerIdAsync(Guid listId)
+    {
+        var database = _dbConnectionFactory.CreateConnectionAsync();
+        var collection = database.GetCollection<TaskList>("TaskList");
+        
+        var result = await collection.Find(x => x.ListId == listId).FirstOrDefaultAsync();
+
+        return result.OwnerId;
+    }
+
     public async Task<bool> UpdateAsync(TaskList taskList)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
@@ -127,7 +137,7 @@ public class TaskListRepository : ITaskListRepository
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskList>("TaskList");
 
-        var document = await collection.Find(i => i.ListId == id).FirstAsync();
-        return document is not null;
+        var exist = await collection.Find(i => i.ListId == id).AnyAsync();
+        return exist;
     }
 }

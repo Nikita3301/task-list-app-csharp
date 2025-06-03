@@ -17,6 +17,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<ITaskItemRepository, TaskItemRepository>();
         services.AddSingleton<ITaskItemService, TaskItemService>();
+        services.AddSingleton<IConnectionRepository, ConnectionRepository>();
+        services.AddSingleton<IConnectionService, ConnectionService>();
         services.AddValidatorsFromAssemblyContaining<IApplicationMarker>(ServiceLifetime.Singleton);
         
         return services;

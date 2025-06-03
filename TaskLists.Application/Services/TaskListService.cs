@@ -12,7 +12,8 @@ public class TaskListService : ITaskListService
     private readonly IUserRepository _userRepository;
     private readonly IValidator<TaskList> _taskListValidator;
 
-    public TaskListService(ITaskListRepository taskListRepository, ITaskItemRepository taskItemRepository, IUserRepository userRepository, IValidator<TaskList> taskListValidator)
+    public TaskListService(ITaskListRepository taskListRepository, ITaskItemRepository taskItemRepository,
+        IUserRepository userRepository, IValidator<TaskList> taskListValidator)
     {
         _taskListRepository = taskListRepository;
         _taskItemRepository = taskItemRepository;
@@ -20,24 +21,29 @@ public class TaskListService : ITaskListService
         _taskListValidator = taskListValidator;
     }
 
-    public async Task<TaskList?> CreateAsync(TaskList taskList)
+    public async Task<TaskList?> CreateAsync(Guid userId, TaskList taskList)
     {
-        await _taskListValidator.ValidateAndThrowAsync(taskList);
-        var taskListCreated = await _taskListRepository.CreateAsync(taskList);
-        
-        return taskListCreated;
-    }
-
-    public async Task<List<TaskList>?> GetByUserIdAsync(Guid userId)
-    {
-
         var userExists = await _userRepository.ExistsByIdAsync(userId);
-        if (userExists)
+        if (!userExists)
         {
             return null;
         }
-        
-        var taskList = await _taskListRepository.GetByUserIdAsync(userId);
+
+        await _taskListValidator.ValidateAndThrowAsync(taskList);
+        var taskListCreated = await _taskListRepository.CreateAsync(taskList);
+
+        return taskListCreated;
+    }
+
+    public async Task<List<TaskList>?> GetByUserIdAsync(Guid userId, Guid ownerId)
+    {
+        var userExists = await _userRepository.ExistsByIdAsync(userId);
+        if (!userExists)
+        {
+            return null;
+        }
+
+        var taskList = await _taskListRepository.GetByUserIdAsync(ownerId);
         if (taskList is null)
         {
             return [];
@@ -47,60 +53,77 @@ public class TaskListService : ITaskListService
         {
             taskListItem.Tasks = await _taskItemRepository.GetTasksByListIdAsync(taskListItem.ListId);
         }
-       
-        return taskList;
 
+        return taskList;
     }
 
-    public async Task<TaskList?> GetByListIdAsync(Guid listId)
+    public async Task<TaskList?> GetByListIdAsync(Guid userId, Guid listId)
     {
-        
+        var userExists = await _userRepository.ExistsByIdAsync(userId);
+        if (!userExists)
+        {
+            return null;
+        }
+
         var taskList = await _taskListRepository.GetByListIdAsync(listId);
         if (taskList is null)
         {
             return null;
         }
+
         taskList.Tasks = await _taskItemRepository.GetTasksByListIdAsync(taskList.ListId);
         return taskList;
     }
 
-    public async Task<TaskList?> UpdateAsync(TaskList taskList)
+    public async Task<TaskList?> UpdateAsync(Guid userId, TaskList taskList)
     {
-        await _taskListValidator.ValidateAndThrowAsync(taskList);
-        
-       var taskListExists = await _taskListRepository.ExistsByIdAsync(taskList.ListId);
-
-       if (!taskListExists)
-       {
-           return null;
-       }
-       
-       await _taskListRepository.UpdateAsync(taskList);
-       
-       var tasks = await _taskItemRepository.GetTasksByListIdAsync(taskList.ListId);
-       
-       taskList.Tasks = tasks;
-       
-       return taskList;
-    }
-
-    public async Task<TaskList?> UpdateFullAsync(TaskList taskList)
-    {
-        await _taskListValidator.ValidateAndThrowAsync(taskList);
-        
-        await _taskListRepository.UpdateAsync(taskList);
-        
-        // var tasksExists = await _taskItemRepository.ExistsTasksByListIdAsync(taskList.ListId);
-
-        if (taskList.Tasks is not null)
-        { 
-            await _taskItemRepository.UpdateAllTasksByListIdAsync(taskList.Tasks, taskList.ListId);
+        var userExists = await _userRepository.ExistsByIdAsync(userId);
+        if (!userExists)
+        {
+            return null;
         }
-        
+
+        await _taskListValidator.ValidateAndThrowAsync(taskList);
+
+        var taskListExists = await _taskListRepository.ExistsByIdAsync(taskList.ListId);
+
+        if (!taskListExists)
+        {
+            return null;
+        }
+
+        await _taskListRepository.UpdateAsync(taskList);
+
+        var tasks = await _taskItemRepository.GetTasksByListIdAsync(taskList.ListId);
+
+        taskList.Tasks = tasks;
+
         return taskList;
     }
 
-    public Task<bool> DeleteAsync(TaskList taskList)
+    public async Task<TaskList?> UpdateFullAsync(Guid userId, TaskList taskList)
+    {
+        var userExists = await _userRepository.ExistsByIdAsync(userId);
+        if (!userExists)
+        {
+            return null;
+        }
+
+        await _taskListValidator.ValidateAndThrowAsync(taskList);
+
+        await _taskListRepository.UpdateAsync(taskList);
+
+        // var tasksExists = await _taskItemRepository.ExistsTasksByListIdAsync(taskList.ListId);
+
+        if (taskList.Tasks is not null)
+        {
+            await _taskItemRepository.UpdateAllTasksByListIdAsync(taskList.Tasks, taskList.ListId);
+        }
+
+        return taskList;
+    }
+
+    public Task<bool> DeleteAsync(Guid userId, TaskList taskList)
     {
         throw new NotImplementedException();
     }

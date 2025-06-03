@@ -27,12 +27,6 @@ public class TaskListController : ControllerBase
     [ProducesResponseType(typeof(ValidationFailureResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateTaskListRequest request)
     {
-        var userExists = await _userRepository.ExistsByIdAsync(request.UserId);
-        if (!userExists)
-        {
-            return BadRequest("User does not exist");
-        }
-   
         var taskList = request.MapToTaskList();
         
         if (request.Tasks?.Count > 0)
@@ -41,7 +35,7 @@ public class TaskListController : ControllerBase
             taskList.Tasks = tasks;
         }
         
-        var taskListCreationResult = await _taskListService.CreateAsync(taskList);
+        var taskListCreationResult = await _taskListService.CreateAsync(request.UserId, taskList);
         if (taskListCreationResult is null)
         {
             return BadRequest("Could not create task list");
@@ -51,21 +45,19 @@ public class TaskListController : ControllerBase
         
         return Ok(result);
 
+        
         // ????
-        // return CreatedAtRoute(ApiEndpoints.TaskListEndpoints.GetByListId, new { listId = taskList.ListId }, taskList);
+        // return CreatedAtAction(nameof(GetByListIdAsync), new { listId = taskList.ListId }, new GetTaskListRequest
+        // {
+        //     UserId = Guid.Parse((ReadOnlySpan<char>)"3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        // });
     }
 
     [HttpPut(ApiEndpoints.TaskListEndpoints.Update)]
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid listId, [FromBody] UpdateTaskListRequest request)
     {
-        var userExists = await _userRepository.ExistsByIdAsync(request.UserId);
-        if (!userExists)
-        {
-            return BadRequest("User not found");
-        }
-        
         var taskList = request.MapToTaskList(listId);
-        var result = await _taskListService.UpdateAsync(taskList);
+        var result = await _taskListService.UpdateAsync(request.UserId, taskList);
 
         return Ok(result);
     }
@@ -73,28 +65,22 @@ public class TaskListController : ControllerBase
     [HttpPut(ApiEndpoints.TaskListEndpoints.UpdateFull)]
     public async Task<IActionResult> UpdateFullAsync([FromRoute] Guid listId, [FromBody] UpdateFullTaskListRequest request)
     {
-        
-        var userExists = await _userRepository.ExistsByIdAsync(request.UserId);
-        if (!userExists)
-        {
-            return BadRequest("User not found");
-        }
-        var taskById = await _taskListService.GetByListIdAsync(listId);
+        var taskById = await _taskListService.GetByListIdAsync(request.UserId, listId);
      
         if (taskById is null)
         {
             return NotFound();
         }
         var taskList = request.MapToTaskListAndTasks(listId, taskById.CreatedAt);
-        var result = await _taskListService.UpdateFullAsync(taskList);
+        var result = await _taskListService.UpdateFullAsync(request.UserId, taskList);
 
         return Ok(result);
     }
 
     [HttpGet(ApiEndpoints.TaskListEndpoints.GetByUserId)]
-    public async Task<IActionResult> GetByUserIdAsync([FromRoute] Guid userId)
+    public async Task<IActionResult> GetByUserIdAsync([FromRoute] Guid ownerId, [FromQuery] Guid userId)
     {
-        var result = await _taskListService.GetByUserIdAsync(userId);
+        var result = await _taskListService.GetByUserIdAsync(userId, ownerId);
 
         return result switch
         {
@@ -107,13 +93,8 @@ public class TaskListController : ControllerBase
     [HttpGet(ApiEndpoints.TaskListEndpoints.GetByListId)]
     public async Task<IActionResult> GetByListIdAsync([FromRoute] Guid listId, [FromBody] GetTaskListRequest request)
     {
-        var userExists = await _userRepository.ExistsByIdAsync(request.UserId);
-        if (!userExists)
-        {
-            return BadRequest("User not found");
-        }
-        
-        var result = await _taskListService.GetByListIdAsync(listId);
+        var result = await _taskListService.GetByListIdAsync(request.UserId, listId);
         return Ok(result);
     }
+    
 }

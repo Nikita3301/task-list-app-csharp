@@ -11,13 +11,9 @@ public static class ApiEndpoints
         
         public const string Create = Base;
         public const string GetByListId = $"{Base}/by-list/{{listId:guid}}";
-        public const string GetByUserId = $"{Base}/by-user/{{userId:guid}}";
+        public const string GetByUserId = $"{Base}/by-user/{{ownerId:guid}}";
         public const string Update = $"{Base}/{{listId:guid}}";
         public const string UpdateFull = $"{Base}/full/{{listId:guid}}";
-        public const string Delete = $"{Base}/{{id:guid}}";
-        
-        public const string Rate = $"{Base}/{{id:guid}}/ratings";
-        public const string DeleteRating = $"{Base}/{{id:guid}}/ratings";
         
     }
 
@@ -27,13 +23,6 @@ public static class ApiEndpoints
         private const string Base = $"{ApiBase}/task";
         
         public const string Create = $"{Base}/{{listId:guid}}";
-        public const string Get = $"{Base}/{{listId:guid}}";
-        public const string GetAll = Base;
-        public const string Update = $"{Base}/{{id:guid}}";
-        public const string Delete = $"{Base}/{{id:guid}}";
-        
-        public const string Rate = $"{Base}/{{id:guid}}/ratings";
-        public const string DeleteRating = $"{Base}/{{id:guid}}/ratings";
         
     }
 
@@ -41,6 +30,17 @@ public static class ApiEndpoints
     {
         private const string Base = $"{ApiBase}/users";
         public const string Create = Base;
+        
+    }
+    
+    
+    public static class TaskListConnectionsEndpoints
+    {
+        private const string Base = $"{ApiBase}/connection";
+        
+        public const string Create = Base;
+        public const string Get = $"{Base}/{{listId:guid}}";
+        public const string Delete = $"{Base}/{{listId:guid}}";
         
     }
     

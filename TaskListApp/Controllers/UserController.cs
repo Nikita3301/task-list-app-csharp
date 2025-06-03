@@ -14,7 +14,6 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-
     [HttpPost(ApiEndpoints.UsersEndpoints.Create)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request)
     { 
