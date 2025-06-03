@@ -25,6 +25,7 @@ app.UseSwaggerUI();
 
 
 app.UseMiddleware<ValidationMappingMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapControllers();
 
 app.UseHttpsRedirection();

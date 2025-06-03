@@ -17,7 +17,7 @@ public class UserController : ControllerBase
     [HttpPost(ApiEndpoints.UsersEndpoints.Create)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request)
     { 
-        var result = await _userService.CreateAsync(request.UserId, request.FullName);
+        var result = await _userService.CreateAsync(request.FullName);
         return result ? Ok() : BadRequest();
     }
 }

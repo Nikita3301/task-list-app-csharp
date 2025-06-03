@@ -2,6 +2,6 @@
 
 public interface IUserService
 {
-    Task<bool> CreateAsync(Guid id, string name);
+    Task<bool> CreateAsync(string name);
     Task<bool> ExistsByIdAsync(Guid id);
 }

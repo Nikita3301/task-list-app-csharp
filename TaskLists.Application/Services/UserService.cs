@@ -12,9 +12,9 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<bool> CreateAsync(Guid id, string name)
+    public async Task<bool> CreateAsync(string name)
     {
-        return await _userRepository.CreateAsync(id, name);
+        return await _userRepository.CreateAsync( name);
     }
 
     public async Task<bool> ExistsByIdAsync(Guid id)

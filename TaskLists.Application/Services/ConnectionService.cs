@@ -41,7 +41,7 @@ public class ConnectionService : IConnectionService
         {
             if (userId != ownerId)
             {
-                throw new NoPermissionException("User has no permission");
+                throw new NoPermissionException();
             }
             
 
@@ -51,7 +51,7 @@ public class ConnectionService : IConnectionService
         var hasPermission = await _connectionRepository.HasUserPermissionAsync(userId, taskListId);
         if (!hasPermission)
         {
-            throw new NoPermissionException("User has no permission");
+            throw new NoPermissionException();
         }
 
         return await _connectionRepository.UpdateAsync(taskListId, otherUserId);

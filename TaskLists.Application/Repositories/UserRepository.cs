@@ -16,14 +16,14 @@ public class UserRepository : IUserRepository
     }
 
 
-    public async Task<bool> CreateAsync(Guid id, string fullName)
+    public async Task<bool> CreateAsync(string fullName)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<User>("Users");
 
         var user = new User
         {
-            Id = id,
+            Id = Guid.NewGuid(),
             FullName = fullName,
         };
         try

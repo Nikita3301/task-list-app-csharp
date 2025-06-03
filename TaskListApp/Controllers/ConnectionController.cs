@@ -18,15 +18,10 @@ public class ConnectionController : ControllerBase
     [HttpPost(ApiEndpoints.TaskListConnectionsEndpoints.Create)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateConnectionRequest request)
     {
-        try
-        {
+       
             var result = await _connectionService.CreateAsync(request.UserId, request.ListId, request.OtherUserId);
             return Ok("Connection created");
-        }
-        catch (BaseException e)
-        {
-            return StatusCode((int)e.ErrorCode, e.Message);
-        }
+    
         
         //OR
         

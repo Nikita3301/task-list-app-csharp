@@ -27,18 +27,12 @@ public class ConnectionRepository : IConnectionRepository
             ConnectedUserIds = [otherUserId]
         };
 
-        try
-        {
-            await taskListConnectionCollection.InsertOneAsync(taskListConnection);
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
+
+        await taskListConnectionCollection.InsertOneAsync(taskListConnection);
+        return true;
     }
-    
-    
+
+
     public async Task<bool> UpdateAsync(Guid taskListId, Guid otherUserId)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
@@ -62,8 +56,8 @@ public class ConnectionRepository : IConnectionRepository
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskListConnection>("TaskListConnection");
-        
-        
+
+
         var connection = await collection.Find(x => x.ListId == taskListId).FirstOrDefaultAsync();
         if (connection is null)
         {
@@ -77,7 +71,7 @@ public class ConnectionRepository : IConnectionRepository
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskListConnection>("TaskListConnection");
-        
+
         try
         {
             var filter = Builders<TaskListConnection>.Filter.Eq(x => x.ListId, taskListId);
@@ -103,18 +97,16 @@ public class ConnectionRepository : IConnectionRepository
 
         return hasPermission;
     }
-    
-    
+
+
     public async Task<bool> HasConnectionWithUserAsync(Guid userId, Guid taskListId)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskListConnection>("TaskListConnection");
 
         return await collection.Find(Builders<TaskListConnection>.Filter.Eq("Id", taskListId)
-                                                  & Builders<TaskListConnection>.Filter.AnyEq("ConnectedUserIds", userId))
+                                     & Builders<TaskListConnection>.Filter.AnyEq("ConnectedUserIds", userId))
             .AnyAsync();
-
-        
     }
 
     public async Task<bool> ConnectionExistAsync(Guid taskListId)
