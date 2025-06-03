@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TaskLists.Application.Exceptions;
 using TaskLists.Application.Services;
 using TaskLists.Contracts.Requests;
 
@@ -17,13 +18,33 @@ public class ConnectionController : ControllerBase
     [HttpPost(ApiEndpoints.TaskListConnectionsEndpoints.Create)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateConnectionRequest request)
     {
-        var result = await _connectionService.CreateAsync(request.UserId, request.ListId, request.OtherUserId);
-        if (!result)
+        try
         {
-            return BadRequest("Could not create connection");
+            var result = await _connectionService.CreateAsync(request.UserId, request.ListId, request.OtherUserId);
+            return Ok("Connection created");
+        }
+        catch (BaseException e)
+        {
+            return StatusCode((int)e.ErrorCode, e.Message);
         }
         
-        return Ok("Connection created");
+        //OR
+        
+        // catch (UserNotFoundException e)
+        // {
+        //     return NotFound($"{e.ErrorCode} - {e.Message} -  {e.IsSuccess}");
+        // }
+        // catch (TaskListNotFoundException e)
+        // {
+        //     return NotFound($"{e.ErrorCode} - {e.Message} -  {e.IsSuccess}");
+        // }
+        // catch (NoPermissionException e)
+        // {
+        //     return StatusCode((int)e.ErrorCode, e.Message);
+        // }
+        //
+        //
+       
     }
     
     

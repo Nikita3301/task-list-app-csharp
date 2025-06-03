@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using TaskLists.Application.Database;
+using TaskLists.Application.Exceptions;
 using TaskLists.Application.Models;
 
 namespace TaskLists.Application.Repositories;
@@ -31,7 +32,7 @@ public class ConnectionRepository : IConnectionRepository
             await taskListConnectionCollection.InsertOneAsync(taskListConnection);
             return true;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return false;
         }
@@ -50,7 +51,7 @@ public class ConnectionRepository : IConnectionRepository
             await collection.FindOneAndUpdateAsync(filter, update);
             return true;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return false;
         }

@@ -1,4 +1,5 @@
-﻿using TaskLists.Application.Models;
+﻿using TaskLists.Application.Exceptions;
+using TaskLists.Application.Models;
 using TaskLists.Application.Repositories;
 
 namespace TaskLists.Application.Services;
@@ -24,9 +25,14 @@ public class ConnectionService : IConnectionService
         var otherUserExists = await _userRepository.ExistsByIdAsync(otherUserId);
         var taskListExists = await _taskListRepository.ExistsByIdAsync(taskListId);
 
-        if (!userExists || !otherUserExists || !taskListExists)
+        if (!userExists || !otherUserExists)
         {
-            return false;
+            throw new UserNotFoundException("User not found");
+        }
+
+        if (!taskListExists)
+        {
+            throw new TaskListNotFoundException("TaskList not found");
         }
 
         var connectionExist = await _connectionRepository.ConnectionExistAsync(taskListId);
@@ -35,8 +41,9 @@ public class ConnectionService : IConnectionService
         {
             if (userId != ownerId)
             {
-                return false;
+                throw new NoPermissionException("User has no permission");
             }
+            
 
             return await _connectionRepository.CreateAsync(taskListId, ownerId, otherUserId);
         }
@@ -44,7 +51,7 @@ public class ConnectionService : IConnectionService
         var hasPermission = await _connectionRepository.HasUserPermissionAsync(userId, taskListId);
         if (!hasPermission)
         {
-            return false;
+            throw new NoPermissionException("User has no permission");
         }
 
         return await _connectionRepository.UpdateAsync(taskListId, otherUserId);
