@@ -11,49 +11,40 @@ namespace TaskListApp.Controllers;
 public class TaskListController : ControllerBase
 {
     private readonly ITaskListService _taskListService;
-    private readonly ITaskItemService _taskItemService;
-    private readonly IUserRepository _userRepository;
 
-
-    public TaskListController(ITaskListService taskListService, ITaskItemService taskItemService, IUserRepository userRepository)
+    public TaskListController(ITaskListService taskListService)
     {
         _taskListService = taskListService;
-        _taskItemService = taskItemService;
-        _userRepository = userRepository;
     }
 
+
+    // Створити новий список задач
     [HttpPost(ApiEndpoints.TaskListEndpoints.Create)]
     [ProducesResponseType(typeof(TaskListResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationFailureResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateTaskListRequest request)
     {
         var taskList = request.MapToTaskList();
         
-        if (request.Tasks?.Count > 0)
-        {
-            var tasks = request.Tasks.MapToTasks(taskList.ListId);
-            taskList.Tasks = tasks;
-        }
-        
         var taskListCreationResult = await _taskListService.CreateAsync(request.UserId, taskList);
-        if (taskListCreationResult is null)
-        {
-            return BadRequest("Could not create task list");
-        }
+        var result = taskListCreationResult?.MapToTaskListResponse();
         
-        var result = taskListCreationResult.MapToTaskListResponse();
-        
-        return Ok(result);
-
+        return Created(
+            ApiEndpoints.TaskListEndpoints.GetByListId,
+            result
+        );
         
         // ????
-        // return CreatedAtAction(nameof(GetByListIdAsync), new { listId = taskList.ListId }, new GetTaskListRequest
-        // {
-        //     UserId = Guid.Parse((ReadOnlySpan<char>)"3fa85f64-5717-4562-b3fc-2c963f66afa6")
-        // });
+        // return CreatedAtAction(nameof(GetByListIdAsync), new { listId = taskList.Id }, result);
     }
 
+    
+    // Змінити існуючий список задач
     [HttpPut(ApiEndpoints.TaskListEndpoints.Update)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationFailureResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid listId, [FromBody] UpdateTaskListRequest request)
     {
         var taskList = request.MapToTaskList(listId);
@@ -61,40 +52,72 @@ public class TaskListController : ControllerBase
 
         return Ok(result);
     }
-
-    [HttpPut(ApiEndpoints.TaskListEndpoints.UpdateFull)]
-    public async Task<IActionResult> UpdateFullAsync([FromRoute] Guid listId, [FromBody] UpdateFullTaskListRequest request)
+    
+    // Видалити існуючий список задач
+    [HttpDelete(ApiEndpoints.TaskListEndpoints.Delete)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteAsync([FromRoute] Guid listId, [FromBody] DeleteTaskListRequest request)
     {
-        var taskById = await _taskListService.GetByListIdAsync(request.UserId, listId);
-     
-        if (taskById is null)
-        {
-            return NotFound();
-        }
-        var taskList = request.MapToTaskListAndTasks(listId, taskById.CreatedAt);
-        var result = await _taskListService.UpdateFullAsync(request.UserId, taskList);
-
-        return Ok(result);
-    }
-
-    [HttpGet(ApiEndpoints.TaskListEndpoints.GetByUserId)]
-    public async Task<IActionResult> GetByUserIdAsync([FromRoute] Guid ownerId, [FromQuery] Guid userId)
-    {
-        var result = await _taskListService.GetByUserIdAsync(userId, ownerId);
-
-        return result switch
-        {
-            null => NotFound("User with this id does not exist"),
-            [] => NoContent(),
-            _ => Ok(result)
-        };
+        var result = await _taskListService.DeleteByIdAsync(request.UserId, listId);
+        return result ? Ok() : BadRequest();
     }
     
+    // Отримати один існуючий список задач
     [HttpGet(ApiEndpoints.TaskListEndpoints.GetByListId)]
-    public async Task<IActionResult> GetByListIdAsync([FromRoute] Guid listId, [FromBody] GetTaskListRequest request)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetByListIdAsync([FromRoute] Guid listId, [FromQuery] GetTaskListRequest request)
     {
         var result = await _taskListService.GetByListIdAsync(request.UserId, listId);
         return Ok(result);
+    }
+    
+    // Отримати список списків задач 
+    [HttpGet(ApiEndpoints.TaskListEndpoints.GetAll)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAll([FromQuery] GetAllTaskListsRequest request)
+    {
+        var options = request.MapToOptions();
+        var result = await _taskListService.GetAllAsync(request.UserId, options);
+        var response = result?.MapToPagedResponse();
+
+        return Ok(response);
+    }
+    
+    // Додати зв’язок одного списку задач з вказаним користувачем
+    [HttpPost(ApiEndpoints.TaskListConnectionsEndpoints.CreateConnection)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateConnectionAsync([FromRoute] Guid listId, [FromBody] CreateConnectionRequest request)
+    {
+        var result = await _taskListService.CreateConnectionAsync(listId, request.UserId, request.OtherUserId);
+        return result ? Created() : BadRequest();
+    }
+    
+
+    // Отримати зв’язки одного списку задач з користувачами
+    [HttpGet(ApiEndpoints.TaskListConnectionsEndpoints.GetAllConnections)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAllConnections([FromQuery] GetAllConnectionsRequest request)
+    {
+        var result = await _taskListService.GetAllConnectionsAsync(request.UserId, request.ListId);
+
+        return Ok(result);
+    }
+    
+    // Прибрати зв’язок одного списку задач з вказаним користувачем
+    [HttpDelete(ApiEndpoints.TaskListConnectionsEndpoints.Delete)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteConnectionAsync([FromRoute] Guid listId, [FromBody] DeleteConnectionRequest request)
+    {
+        var result = await _taskListService.DeleteConnectionsAsync(request.UserId, listId, request.UserIdToDelete);
+        return result ? Ok() : BadRequest();
     }
     
 }

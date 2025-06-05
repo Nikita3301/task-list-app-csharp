@@ -16,9 +16,4 @@ public class UserService : IUserService
     {
         return await _userRepository.CreateAsync( name);
     }
-
-    public async Task<bool> ExistsByIdAsync(Guid id)
-    {
-        return await _userRepository.ExistsByIdAsync(id);
-    }
 }

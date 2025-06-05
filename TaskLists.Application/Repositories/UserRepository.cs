@@ -26,17 +26,19 @@ public class UserRepository : IUserRepository
             Id = Guid.NewGuid(),
             FullName = fullName,
         };
-        try
-        {
-            await collection.InsertOneAsync(user);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return false;
-        }
+
+        await collection.InsertOneAsync(user);
 
         return true;
+    }
+
+    public async Task<User?> GetByIdAsync(Guid id)
+    {
+        var database = _dbConnectionFactory.CreateConnectionAsync();
+        var collection = database.GetCollection<User>("Users");
+
+        return await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+
     }
 
     public async Task<bool> ExistsByIdAsync(Guid id)
@@ -46,9 +48,5 @@ public class UserRepository : IUserRepository
 
         var exists = await collection.Find(x => x.Id == id).AnyAsync();
         return exists;
-
-        // var filter = Builders<User>.Filter.Eq("Id", id);
-        // var userExist = collection.Find(filter).CountDocuments();
-        // return Task.FromResult(userExist > 0);
     }
 }

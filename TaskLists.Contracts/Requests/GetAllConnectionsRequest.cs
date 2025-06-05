@@ -1,7 +1,7 @@
 ﻿namespace TaskLists.Contracts.Requests;
 
-public class UpdateTaskListRequest
+public class GetAllConnectionsRequest
 {
     public required Guid UserId { get; init; }
-    public required string ListName { get; init; }
+    public required Guid ListId { get; init; }
 }

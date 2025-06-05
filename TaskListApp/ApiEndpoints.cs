@@ -8,12 +8,12 @@ public static class ApiEndpoints
     public static class TaskListEndpoints
     {
         private const string Base = $"{ApiBase}/tasklist";
-        
         public const string Create = Base;
+        
         public const string GetByListId = $"{Base}/by-list/{{listId:guid}}";
-        public const string GetByUserId = $"{Base}/by-user/{{ownerId:guid}}";
+        public const string GetAll = $"{Base}/all";
         public const string Update = $"{Base}/{{listId:guid}}";
-        public const string UpdateFull = $"{Base}/full/{{listId:guid}}";
+        public const string Delete = $"{Base}/{{listId:guid}}";
         
     }
 
@@ -38,8 +38,8 @@ public static class ApiEndpoints
     {
         private const string Base = $"{ApiBase}/connection";
         
-        public const string Create = Base;
-        public const string Get = $"{Base}/{{listId:guid}}";
+        public const string CreateConnection = $"{Base}/{{listId:guid}}";
+        public const string GetAllConnections =  $"{Base}/all";
         public const string Delete = $"{Base}/{{listId:guid}}";
         
     }

@@ -4,7 +4,7 @@ namespace TaskLists.Application.Exceptions;
 
 public class TaskListNotFoundException : BaseException
 {
-    public TaskListNotFoundException(string message) : base(message)
+    public TaskListNotFoundException() : base("TaskList not found")
     {
         ErrorCode = HttpStatusCode.NotFound;
      

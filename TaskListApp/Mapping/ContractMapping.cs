@@ -10,8 +10,10 @@ public static class ContractMapping
     {
         return new TaskList
         {
-            ListName = request.ListName,
-            OwnerId = request.UserId
+            Name = request.Name,
+            OwnerId = request.UserId,
+            ConnectedUsers = request.ConnectedUsers ?? [],
+            Tasks = request.Tasks?.MapToTasks()
         };
     }
 
@@ -20,46 +22,25 @@ public static class ContractMapping
     {
         return new TaskList
         {
-            ListId = listId,
-            ListName = request.ListName,
-            OwnerId = request.UserId
-        };
-    }
-
-
-    public static TaskList MapToTaskListAndTasks(this UpdateFullTaskListRequest request, Guid listId, DateTime createdAt)
-    {
-        List<TaskItem> tasks = [];
-        if (request.Tasks != null)
-        {
-            tasks = request.Tasks.Select(item => MapToTask(item, listId)).ToList();
-        }
-
-
-        return new TaskList
-        {
-            ListId = listId,
-            ListName = request.ListName,
+            Id = listId,
+            Name = request.ListName,
             OwnerId = request.UserId,
-            Tasks = tasks,
-            CreatedAt = createdAt
         };
     }
 
 
-    public static TaskItem MapToTask(this CreateTaskRequest request, Guid listId)
+    private static TaskItem MapToTask(this CreateTaskRequest request)
     {
         return new TaskItem
         {
-            ListId = listId,
             Description = request.Description,
             Completed = request.Completed,
         };
     }
 
-    public static List<TaskItem> MapToTasks(this List<CreateTaskRequest> request, Guid listId)
+    private static List<TaskItem> MapToTasks(this List<CreateTaskRequest> request)
     {
-        return request.Select(item => MapToTask(item, listId)).ToList();
+        return request.Select(MapToTask).ToList();
     }
     
 
@@ -68,11 +49,41 @@ public static class ContractMapping
     {
         return new TaskListResponse
         {
-            ListId = taskList.ListId,
-            ListName = taskList.ListName,
+            Id = taskList.Id,
+            Name = taskList.Name,
             OwnerId = taskList.OwnerId,
             Tasks = taskList.Tasks?.Select(MapToTaskItemResponse).ToList(),
+            ConnectedUsers = taskList.ConnectedUsers,
             CreatedAt = taskList.CreatedAt  
+        };
+    }
+    
+
+    public static PageOptions MapToOptions(this GetAllTaskListsRequest request)
+    {
+        return new PageOptions()
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+        };
+    }
+
+    public static PagedResponse<TaskListShortResponse> MapToPagedResponse(this PagedResult<TaskList> taskList)
+    {
+        return new PagedResponse<TaskListShortResponse>
+        {
+            Items = from item in taskList.Items
+                select new TaskListShortResponse
+                {
+                    Id = item.Id,
+                    Name = item.Name,
+                    CreatedAt = item.CreatedAt
+                },
+            Page = taskList.Page,
+            PageSize = taskList.PageSize,
+            TotalItemsCount = taskList.TotalItemsCount,
+            TotalPages = taskList.TotalPages,
+            HasNextPage = taskList.HasNextPage,
         };
     }
 

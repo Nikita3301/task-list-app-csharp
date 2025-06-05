@@ -1,4 +1,5 @@
 ﻿using TaskLists.Application.Exceptions;
+using TaskLists.Contracts.Responses;
 
 namespace TaskListApp.Mapping;
 
@@ -20,7 +21,11 @@ public class ExceptionHandlingMiddleware
         catch (BaseException e)
         {
             context.Response.StatusCode = (int)e.ErrorCode;
-            await context.Response.WriteAsJsonAsync(e.Message);
+            var response = new ErrorResponse()
+            {
+                Message = e.Message,
+            };
+            await context.Response.WriteAsJsonAsync(response);
         }
     }
     

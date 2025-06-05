@@ -4,9 +4,10 @@ namespace TaskLists.Contracts.Responses;
 
 public class TaskListResponse
 {
-    public required Guid ListId { get; init; }
-    public required string ListName { get; init; }
-    public required Guid OwnerId { get; init; }
+    public Guid Id { get; init; }
+    public required string Name { get; init; }
+    public Guid OwnerId { get; init; }
     public List<TaskItemResponse>? Tasks { get; init; }
-    public required DateTime CreatedAt { get; init; }
+    public List<User>? ConnectedUsers { get; init; }
+    public DateTime CreatedAt { get; init; }
 }

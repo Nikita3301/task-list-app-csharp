@@ -20,116 +20,102 @@ public class TaskListRepository : ITaskListRepository
     public async Task<TaskList?> CreateAsync(TaskList taskList)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
-        var taskItemsCollection = database.GetCollection<TaskItem>("Tasks");
         var taskListCollection = database.GetCollection<TaskList>("TaskList");
-
-        
-        //System.NotSupportedException: Standalone servers do not support transactions.
-        
-        // using var session = await database.Client.StartSessionAsync();
-        // session.StartTransaction();
-        // try
-        // {
-        //     await taskListCollection.InsertOneAsync(taskList);
-        //
-        //     if (taskList.Tasks != null)
-        //     {
-        //         foreach (var taskItem in taskList.Tasks)
-        //         {
-        //             taskItem.ListId = taskList.ListId;
-        //         }
-        //
-        //         await taskItemsCollection.InsertManyAsync(taskList.Tasks);
-        //     }
-        //         
-        //     await session.CommitTransactionAsync();
-        //         
-        //     return taskList;
-        // }
-        // catch (Exception e)
-        // {
-        //     await session.AbortTransactionAsync();
-        //     return null;
-        // }
-        
-        try
-        {
-            await taskListCollection.InsertOneAsync(taskList);
-
-            if (taskList.Tasks == null) return taskList;
-            foreach (var taskItem in taskList.Tasks)
-            {
-                taskItem.ListId = taskList.ListId;
-            }
-                
-            await taskItemsCollection.InsertManyAsync(taskList.Tasks);
-
-            return taskList;
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-        
-        
+        await taskListCollection.InsertOneAsync(taskList);
+        return taskList;
     }
 
-    public async Task<List<TaskList>?> GetByUserIdAsync(Guid userId)
+
+    public async Task<TaskList?> UpdateAsync(TaskList taskList)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskList>("TaskList");
 
-        var document = await collection.Find(x => x.OwnerId == userId).ToListAsync();
-        return document ?? null;
-    }
+        var filter = Builders<TaskList>.Filter.Eq(f => f.Id, taskList.Id);
 
+        var update = Builders<TaskList>.Update.Set(f => f.Name, taskList.Name);
+
+        await collection.UpdateOneAsync(filter, update);
+        var updatedTaskList = await collection.Find(x => x.Id == taskList.Id).FirstOrDefaultAsync();
+
+        return updatedTaskList;
+    }
+    
+    public async Task<bool> DeleteByIdAsync(Guid listId)
+    {
+        var database = _dbConnectionFactory.CreateConnectionAsync();
+        var collection = database.GetCollection<TaskList>("TaskList");
+        
+        var result = await collection.DeleteOneAsync(Builders<TaskList>.Filter.Eq(f => f.Id, listId));
+        return result.IsAcknowledged;
+    }
+    
     public async Task<TaskList?> GetByListIdAsync(Guid listId)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskList>("TaskList");
+        var taskList = await collection.Find(x => x.Id == listId).FirstAsync();
+        return taskList;
+    }
 
+    public async Task<PagedResult<TaskList>?> GetAllAsync(Guid userId, PageOptions options)
+    {
+        var database = _dbConnectionFactory.CreateConnectionAsync();
+        var collection = database.GetCollection<TaskList>("TaskList");
 
-        var document = await collection.Find(x => x.ListId == listId).FirstOrDefaultAsync();
-        if (document is null)
+        var taskLists = collection.Find(Builders<TaskList>.Filter.ElemMatch(c => c.ConnectedUsers, u => u.Id == userId)).SortByDescending(c => c.CreatedAt);
+        var totalLists = await taskLists.CountDocumentsAsync();
+        var items = await taskLists.Limit(options.PageSize).Skip((options.Page - 1) * options.PageSize).ToListAsync();
+        
+        return new PagedResult<TaskList>()
         {
-            return null;
-        }
-
-        return new TaskList
-        {
-            ListId = document.ListId,
-            ListName = document.ListName,
-            OwnerId = document.OwnerId,
-            CreatedAt = document.CreatedAt
+            Items = items,
+            Page = options.Page,
+            PageSize = options.PageSize,
+            TotalItemsCount = totalLists
         };
     }
 
-    public async Task<Guid> GetOwnerIdAsync(Guid listId)
+    public async Task<bool> CreateConnectionAsync(Guid taskListId, User otherUser)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskList>("TaskList");
         
-        var result = await collection.Find(x => x.ListId == listId).FirstOrDefaultAsync();
+        var taskList = await collection.Find(x => x.Id == taskListId).FirstAsync();
+        
+        taskList.ConnectedUsers.Add(otherUser);
+        
+        var filter = Builders<TaskList>.Filter.Eq(f => f.Id, taskListId);
+        var update = Builders<TaskList>.Update.Set(c => c.ConnectedUsers, taskList.ConnectedUsers);
+        var result = await collection.UpdateOneAsync(filter, update);
 
-        return result.OwnerId;
+        return result.IsAcknowledged;
     }
 
-    public async Task<bool> UpdateAsync(TaskList taskList)
+    public async Task<List<User>> GetAllConnectionsAsync(Guid listId)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskList>("TaskList");
-
-        var filter = Builders<TaskList>.Filter.Eq(f => f.ListId, taskList.ListId);
-
-        var update = Builders<TaskList>.Update.Set(f => f.ListName, taskList.ListName);
-
-        await collection.UpdateOneAsync(filter, update);
-        return true;
+        
+        var taskList = await collection.Find(x => x.Id == listId).FirstAsync();
+        
+        return taskList.ConnectedUsers;
     }
 
-    public Task<bool> DeleteAsync(TaskList taskList)
+    public async Task<bool> DeleteConnectionsAsync(Guid listId, Guid userIdToDelete)
     {
-        throw new NotImplementedException();
+        var database = _dbConnectionFactory.CreateConnectionAsync();
+        var collection = database.GetCollection<TaskList>("TaskList");
+        
+        var taskList = await collection.Find(x => x.Id == listId).FirstAsync();
+        
+        taskList.ConnectedUsers.Remove(taskList.ConnectedUsers.First(u => u.Id == userIdToDelete));
+        
+        var filter = Builders<TaskList>.Filter.Eq(f => f.Id, listId);
+        var update = Builders<TaskList>.Update.Set(c => c.ConnectedUsers, taskList.ConnectedUsers);
+        var result = await collection.UpdateOneAsync(filter, update);
+
+        return result.IsAcknowledged;
     }
 
     public async Task<bool> ExistsByIdAsync(Guid id)
@@ -137,7 +123,7 @@ public class TaskListRepository : ITaskListRepository
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<TaskList>("TaskList");
 
-        var exist = await collection.Find(i => i.ListId == id).AnyAsync();
+        var exist = await collection.Find(i => i.Id == id).AnyAsync();
         return exist;
     }
 }

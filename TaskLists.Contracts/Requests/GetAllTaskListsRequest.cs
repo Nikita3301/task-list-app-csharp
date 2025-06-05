@@ -1,7 +1,7 @@
 ﻿namespace TaskLists.Contracts.Requests;
 
-public class UpdateTaskListRequest
+public class GetAllTaskListsRequest : PagedRequest
 {
     public required Guid UserId { get; init; }
-    public required string ListName { get; init; }
+    
 }
