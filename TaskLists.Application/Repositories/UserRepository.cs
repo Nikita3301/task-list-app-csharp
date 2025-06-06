@@ -16,7 +16,7 @@ public class UserRepository : IUserRepository
     }
 
 
-    public async Task<bool> CreateAsync(string fullName)
+    public async Task<bool> CreateAsync(string fullName, CancellationToken token)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<User>("Users");
@@ -27,26 +27,26 @@ public class UserRepository : IUserRepository
             FullName = fullName,
         };
 
-        await collection.InsertOneAsync(user);
+        await collection.InsertOneAsync(user, cancellationToken: token);
 
         return true;
     }
 
-    public async Task<User?> GetByIdAsync(Guid id)
+    public async Task<User?> GetByIdAsync(Guid id, CancellationToken token)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<User>("Users");
 
-        return await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        return await collection.Find(x => x.Id == id).FirstOrDefaultAsync(cancellationToken: token);
 
     }
 
-    public async Task<bool> ExistsByIdAsync(Guid id)
+    public async Task<bool> ExistsByIdAsync(Guid id, CancellationToken token)
     {
         var database = _dbConnectionFactory.CreateConnectionAsync();
         var collection = database.GetCollection<User>("Users");
 
-        var exists = await collection.Find(x => x.Id == id).AnyAsync();
+        var exists = await collection.Find(x => x.Id == id).AnyAsync(cancellationToken: token);
         return exists;
     }
 }

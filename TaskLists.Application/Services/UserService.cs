@@ -12,8 +12,8 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<bool> CreateAsync(string name)
+    public async Task<bool> CreateAsync(string name, CancellationToken token)
     {
-        return await _userRepository.CreateAsync( name);
+        return await _userRepository.CreateAsync(name, token);
     }
 }

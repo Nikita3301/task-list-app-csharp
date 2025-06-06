@@ -2,5 +2,5 @@
 
 public interface IUserService
 {
-    Task<bool> CreateAsync(string name);
+    Task<bool> CreateAsync(string name, CancellationToken token);
 }

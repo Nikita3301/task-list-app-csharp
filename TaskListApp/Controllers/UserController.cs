@@ -15,9 +15,9 @@ public class UserController : ControllerBase
     }
 
     [HttpPost(ApiEndpoints.UsersEndpoints.Create)]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateUserRequest request, CancellationToken token)
     { 
-        var result = await _userService.CreateAsync(request.FullName);
+        var result = await _userService.CreateAsync(request.FullName, token);
         return result ? Ok() : BadRequest();
     }
 }

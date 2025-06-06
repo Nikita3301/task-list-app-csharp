@@ -1,5 +1,4 @@
-﻿using System.Data;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 
 namespace TaskLists.Application.Database;
 
@@ -14,7 +13,7 @@ public class DbConnectionFactory : IDbConnectionFactory
         _databaseName = databaseName;
     }
 
-    public IMongoDatabase CreateConnectionAsync(CancellationToken token = default)
+    public IMongoDatabase CreateConnectionAsync()
     {
         var client = new MongoClient(_connectionString);
         return client.GetDatabase(_databaseName);
